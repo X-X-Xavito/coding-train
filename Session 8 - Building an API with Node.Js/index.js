@@ -1,10 +1,14 @@
-var words = {
-	"rainbow": 5,
-	"unicorn": 3,
-	"doom": -3,
-	'gloom': -2
+var fs = require('fs');
+//readFiileSync is synchronnous. Which means that the next line of code will run only this line is finished running
+//In this case, it is good because when the server starts up, I want the data to be read before anything else happnes
 
-}
+//However, while the user is making an API request, I dont want the server to be blocked by a synchronous code
+
+var data = fs.readFileSync('words.json');
+//need to parse it because the readFileSync only reads Raw data format. So we have to parse it to JSON so we can read it
+var words = JSON.parse(data);
+
+console.log(words);
 
 
 var express = require('express');
@@ -29,19 +33,29 @@ function addWord(request,response){
 	var score = Number(data.score);
 	var reply;
 	if(!score){
-		reply = {
+		var reply = {
 			msg: 'Score is required.'
 		}
+		response.send(reply);
 	}else{
 
 		words[word] = score;
+		//Before writing the data to the file, I need to turn it to a string
+		var data = JSON.stringify(words,null,2 );
+		//the writeFiles is used to write new files to the DB. Check the File System NodeJs Documentation
+		fs.writeFile('words.json', data, finished);
 
-		reply = {
-			msg: 'Thank you for your word'
+		function finished(err){
+			console.log('all set.')
+			reply = {
+				word: word,
+				score: score,
+				msg: 'Thank you for your word'
+			}
+			response.send(reply);
 		}
 	}
 
-	response.send(reply);
 }
 
 
